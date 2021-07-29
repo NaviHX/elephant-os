@@ -25,6 +25,7 @@ gdt_ptr dw GDT_LIMIT
 
 loadermsg db 'loader in real'
 loader_start:
+    ; 使用0x10中断0x13功能打印字符串
     mov sp, LOADER_BASE_ADDR
     mov bp, loadermsg
     mov cx, 15
@@ -33,16 +34,20 @@ loader_start:
     mov dx, 0x1800
     int 0x10
 
+    ; 打开A20地址线
     in al, 0x92
     or al, 0000_0010b
     out 0x92, al
 
+    ; 加载GDT
     lgdt [gdt_ptr]
 
+    ; PE位置1
     mov eax, cr0
     or eax, 0x00000001
     mov cr0, eax
 
+    ; 刷新流水线
     jmp dword SELECTOR_CODE:p_mode_start
 
 [bits 32]
@@ -55,6 +60,7 @@ p_mode_start:
     mov ax, SELECTOR_VIDEO
     mov gs, ax
 
+    ; 第二行输出一个P
     mov byte [gs: 160], 'P'
     mov byte [gs: 161], 0x0f
 
